@@ -1,4 +1,4 @@
-;APS000000CA000014A90000160F000013EB000014A9000014A9000014A9000014A9000014A9000014A9
+;APS000000CA000014D000001636000013EB000014D0000014D0000014D0000014D0000014D0000014D0
 ;---------------T---------T---------------------T------------------
 
 LVOSupervisor	equ	-30
@@ -332,6 +332,6 @@ log_buffer_end:
 
 	; include test suite
 	
-	include	"sys:test_suite.s"
+	include	"dev:github/rust-amiga-emul-ami-test-runner/test_suite.s"
 
 end_of_all_code:
