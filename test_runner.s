@@ -55,8 +55,6 @@ exit
 	move.l	save_global_sp,sp
 	movem.l	(sp)+,d0-d7/a0-a6
 
-	moveq	#-1,d0
-	add.b	#1,d0
 	rts
 
 save_global_sp	dc.l	$0
