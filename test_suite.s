@@ -2,6 +2,7 @@
 test_suite:
 	dc.l	LSL_B_register_by_immediate
 	dc.l	LSL_B_register_by_immediate
+	dc.l	LSL_B_register_by_immediate+$18
 	dc.l	LSL_B_register_by_immediate
 	dc.l	LSL_B_register_by_immediate
 	dc.l	LSL_B_register_by_immediate+$18

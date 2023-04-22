@@ -154,6 +154,7 @@ exit
 	move.l	#-1,gfx_base
 .no_gfx_base
 	
+
 	move.l	save_global_sp,sp
 	movem.l	(sp)+,d0-d7/a0-a6
 
@@ -205,7 +206,7 @@ run_test
 			; a0 = code source address (ignored)
 
 	lea	code_backup,a2
-	asr.l	#1,d0
+	;asr.l	#1,d0
 	addq.l	#3-1,d0	; 3 extra word for jmp back
 .backup_code_loop
 	move.w	(a1)+,(a2)+
@@ -224,7 +225,7 @@ run_test
 	move.l	a1,.test_jmp_address
 	
 	lea	code_copy,a2
-	asr.l	#1,d0
+	;asr.l	#1,d0
 	subq	#1,d0
 .copy_test_code_loop
 	move.w	(a0),(a1)+
@@ -308,7 +309,7 @@ run_test
 				; a0 = code source address
 
 	lea	code_backup,a2
-	asr.l	#1,d0
+	;asr.l	#1,d0
 	addq.l	#3-1,d0
 .restore_code_loop 
 	move.w	(a2)+,(a1)+
@@ -395,17 +396,46 @@ run_test
 	; fail!
 .fail
 	add.l	#1,test_count_fail
-	
+
+	move.l	current_test,a5
 	bsr	log_str_fail
 	move.l	(a5),a0
 	bsr	log_strz
 	bsr	log_str_eol
 
+	move.l	test_offset_assert_regs(a5),a4
 	
+	move.l	collected_regs+$00,d0	; D0
+	move.l	$00(a4),d1
+	moveq	#"D",d2
+	moveq	#0,d3
+	bsr.s	.fail_details
+	move.l	collected_regs+$04,d0	; D1
+	move.l	$04(a4),d1
+	moveq	#"D",d2
+	moveq	#1,d3
+	bsr.s	.fail_details
+
 	; Assert: Log fail details
 
 
 	rte
+
+.fail_details
+	cmp.l	d0,d1
+	beq.s	.d0_ok
+	move.b	d2,.fail_reg_strz
+	add.b	#"0",d3
+	move.b	d3,.fail_reg_strz+1
+	lea	.fail_reg_strz,a0
+	bsr.w	log_strz
+	
+.d0_ok
+	rts
+
+.fail_reg_strz	dc.b	"XX: expected $XXXXXXXX - was $XXXXXXXX",$a,0
+	align	0,2
+	
 
 current_test	dc.l	$00000000
 test_count_tot	dc.l	$00000000
