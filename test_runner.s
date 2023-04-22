@@ -55,6 +55,10 @@ exit
 	move.l	save_global_sp,sp
 	movem.l	(sp)+,d0-d7/a0-a6
 
+	move.l	test_count_tot,d0
+	move.l	test_count_ok,d1
+	move.l	test_count_fail,d2
+
 	rts
 
 save_global_sp	dc.l	$0
@@ -72,6 +76,10 @@ run_test
 	
 	move.l	a0,a5
 	move.l	a5,current_test
+
+	; increase total test count
+
+	add.l	#1,test_count_tot
 
 	; Backup&Safety: Memory areas
 	; Backup&Safety: Code
@@ -199,10 +207,75 @@ run_test
 
 	; Assert: Check if ok/fail
 
+	move.l	current_test,a5
+	move.l	test_offset_assert_regs(a5),a0
+	
+	move.l	collected_regs+$00,d0	; D0
+	cmp.l	$00(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$04,d0	; D1
+	cmp.l	$04(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$08,d0	; D2
+	cmp.l	$08(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$0c,d0	; D3
+	cmp.l	$0c(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$10,d0	; D4
+	cmp.l	$10(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$14,d0	; D5
+	cmp.l	$14(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$18,d0	; D6
+	cmp.l	$18(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$1c,d0	; D7
+	cmp.l	$1c(a0),d0
+	bne.w	.fail
+	move.l	collected_regs+$20,d0	; A0
+	cmp.l	$20(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$24,d0	; A1
+	cmp.l	$24(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$28,d0	; A2
+	cmp.l	$28(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$2c,d0	; A3
+	cmp.l	$2c(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$30,d0	; A4
+	cmp.l	$30(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$34,d0	; A5
+	cmp.l	$34(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$38,d0	; A6
+	cmp.l	$38(a0),d0
+	bne.s	.fail
+	move.l	collected_regs+$3c,d0	; A7
+	cmp.l	$3c(a0),d0
+	bne.s	.fail
+	move.w	collected_sr,d0	; SR
+	cmp.w	$40(a0),d0
+	bne.s	.fail
+
+	; ok!
+	
+	add.l	#1,test_count_ok
+
 	bsr	log_str_ok
 	move.l	(a5),a0
 	bsr	log_strz
 	bsr	log_str_eol
+
+	rte
+
+	; fail!
+.fail
+	add.l	#1,test_count_fail
 	
 	bsr	log_str_fail
 	move.l	(a5),a0
@@ -216,6 +289,11 @@ run_test
 	rte
 
 current_test	dc.l	$00000000
+test_count_tot	dc.l	$00000000
+test_count_ok	dc.l	$00000000
+test_count_fail	dc.l	$00000000
+
+arrange_sr	dc.w	$0000
 collected_sr	dc.w	$0000
 collected_regs	blk.l	16,$00000000
 
