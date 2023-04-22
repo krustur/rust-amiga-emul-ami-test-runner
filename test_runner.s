@@ -1,0 +1,337 @@
+;APS000000CA000014A90000160F000013EB000014A9000014A9000014A9000014A9000014A9000014A9
+;---------------T---------T---------------------T------------------
+
+LVOSupervisor	equ	-30
+LVOForbid	equ	-132
+LVOPermit	equ	-138
+LVOCacheClearU	equ	-636
+
+jmp_instr	equ	$4ef9
+
+start_of_all_code:
+
+start:
+	;; Disable system
+		
+	movem.l	d0-d7/a0-a6,-(sp)
+	move.l	sp,save_global_sp
+
+	move.l	$4.w,a6
+	jsr	LVOForbid(a6)
+
+
+	; Setup test-runner
+	
+	lea	test_suite,a0
+	move.l	a0,next_test
+
+
+test_loop:
+	; Fetch next test
+	; Exit if no more tests
+	; Point to next test
+	
+	move.l	next_test,a0
+	move.l	(a0)+,d0
+	beq	exit
+	move.l	a0,next_test
+
+	move.l	d0,a0
+	lea	run_test,a5
+	move.l	$4,a6
+	jsr	LVOSupervisor(a6)
+
+
+	; Loop tests
+	
+	bra	test_loop
+
+exit:
+	; Reenable system
+
+	move.l	$4.w,a6
+	jsr	LVOPermit(a6)
+	
+	move.l	save_global_sp,sp
+	movem.l	(sp)+,d0-d7/a0-a6
+
+	moveq	#-1,d0
+	add.b	#1,d0
+	rts
+
+save_global_sp:	dc.l	$0
+next_test:	dc.l	$0
+
+
+;
+; note: This is run in Supervisor mode so we can arrange and assert SR
+;
+; param:
+;  A0 = test
+
+run_test:
+	;; A5 = test
+	
+	move.l	a0,a5
+	move.l	a5,current_test
+
+	; Backup&Safety: Memory areas
+	; Backup&Safety: Code
+
+	move.l	test_offset_act_code(a5),a0
+	move.l	(a0)+,d0	; d0 = code length
+	move.l	(a0)+,a1	; a1 = code target address
+			; a0 = code source address (ignored)
+
+	lea	code_backup,a2
+	asr.l	#1,d0
+	addq.l	#3-1,d0	; 3 extra word for jmp back
+.backup_code_loop
+	move.w	(a1)+,(a2)+
+	dbf	d0,.backup_code_loop	
+
+		
+	; Arrange: Memory areas
+	; Arrange: Code
+
+	move.l	test_offset_act_code(a5),a0
+	move.l	(a0)+,d0	; d0 = code length
+	move.l	(a0)+,a1	; a1 = code target address
+			; a0 = code source address
+
+	move.l	a1,.test_jmp_address
+	
+	lea	code_copy,a2
+	asr.l	#1,d0
+	subq	#1,d0
+.copy_test_code_loop
+	move.w	(a0),(a1)+
+	move.w	(a0)+,(a2)+
+	dbf	d0,.copy_test_code_loop	
+	move.w	#jmp_instr,(a1)+
+	move.w	#jmp_instr,(a2)+
+	move.l	#.return_here_after_test,(a1)+
+	move.l	#.return_here_after_test,(a2)+
+
+	; Arrange: Clear caches
+
+	move.l	$4.w,a6
+	jsr	LVOCacheClearU(a6)
+
+	; Backup&Safety: Stack ?
+
+	move.l	sp,sp_backup
+
+	; Arrange: Stack
+	; Arrange: A-/D-regs + SR
+
+	move.l	test_offset_arrange_regs(a5),a7
+
+	; SR
+
+	move.w	64(a7),d0
+	move.w	sr,d1
+	and.w	#$ffe0,d1
+	or.w	d1,d0
+	move.w	d0,sr
+	
+	;move.l	(a7)+,d0
+	;move.l	(a7)+,d1
+	;move.l	(a7)+,d2
+	;move.l	(a7)+,d3
+	;move.l	(a7)+,d4
+	;move.l	(a7)+,d5
+	;move.l	(a7)+,d6
+	;move.l	(a7)+,d7
+	;move.l	(a7)+,a0
+	;move.l	(a7)+,a1
+	;move.l	(a7)+,a2
+	;move.l	(a7)+,a3
+	;move.l	(a7)+,a4
+	;move.l	(a7)+,a5
+	;move.l	(a7)+,a6
+	;move.l	(a7)+,a7
+	movem.l	(a7)+,d0-d7/a0-a7	; movem doesnt affect SR		
+
+	; Act: Run test!
+	
+	; this is a jmp (xxx).l instruction to the
+	; test code
+	dc.w	jmp_instr
+.test_jmp_address
+	dc.l	$12345678
+
+	; the test will jmp back to this address 
+	; after test code is run
+.return_here_after_test:
+
+	; Act: Collect regs
+
+	move.w	sr,collected_sr
+	move.l	d0,collected_regs+$00
+	move.l	d1,collected_regs+$04
+	move.l	d2,collected_regs+$08
+	move.l	d3,collected_regs+$0c
+	move.l	d4,collected_regs+$10
+	move.l	d5,collected_regs+$14
+	move.l	d6,collected_regs+$18
+	move.l	d7,collected_regs+$1c
+	move.l	a0,collected_regs+$20
+	move.l	a1,collected_regs+$24
+	move.l	a2,collected_regs+$28
+	move.l	a3,collected_regs+$2c
+	move.l	a4,collected_regs+$30
+	move.l	a5,collected_regs+$34
+	move.l	a6,collected_regs+$38
+	move.l	a7,collected_regs+$3c
+
+	; Restore: SP
+
+	move.l	sp_backup,sp
+
+	; Restore: Code
+
+	move.l	current_test,a5
+	move.l	test_offset_act_code(a5),a0
+	move.l	(a0)+,d0		; d0 = code length
+	move.l	(a0)+,a1		; a1 = code target address
+				; a0 = code source address
+
+	lea	code_backup,a2
+	asr.l	#1,d0
+	addq.l	#3-1,d0
+.restore_code_loop 
+	move.w	(a2)+,(a1)+
+	dbf	d0,.restore_code_loop	
+
+
+	; Restore: Clear caches
+	move.l	$4.w,a6
+	jsr	LVOCacheClearU(a6)
+	
+
+	; Assert: Check if ok/fail
+
+	bsr	log_str_ok
+	move.l	(a5),a0
+	bsr	log_strz
+	bsr	log_str_eol
+	
+	bsr	log_str_fail
+	move.l	(a5),a0
+	bsr	log_strz
+	bsr	log_str_eol
+
+	
+	; Assert: Log fail details
+
+
+	rte
+
+current_test:	dc.l	$00000000
+collected_sr:	dc.w	$0000
+collected_regs:	blk.l	16,$00000000
+
+code_backup:	blk.b	512,$00
+code_copy:	blk.b	512,$00
+sp_backup:	dc.l	$00000000
+
+code_temp:	moveq	#2,d0
+
+ 
+
+; Logger functions
+
+log_strz:
+	movem.l	d0/a1-a2,-(sp)
+	;move.l	d0,log_save_d0
+	;move.l	a1,log_save_a1
+	;move.l	a2,log_save_a2
+
+	move.l	log_current_ptr,a1
+	lea.l	log_buffer_end,a2
+.loop
+	move.b	(a0)+,d0
+	beq.s	.done
+
+	cmp.l	a1,a2
+	beq.s	.overflow
+
+	move.b	d0,(a1)+
+	bra.s	.loop
+
+.overflow
+	bsr.s	log_overflow
+;	bra	.done
+
+.done
+	move.l	a1,log_current_ptr
+
+	;move.l	log_save_a2,a2
+	;move.l	log_save_a1,a1
+	;move.l  log_save_d0,d0
+	movem.l	(sp)+,d0/a1-a2
+	rts
+
+log_str_ok:
+	move.l	a0,-(sp)
+	lea	.str,a0
+	bsr	log_strz
+	move.l	(sp)+,a0
+	rts
+
+.str	dc.b	"  ok ",0
+	even
+	
+log_str_fail:
+	move.l	a0,-(sp)
+	lea	.str,a0
+	bsr	log_strz
+	move.l	(sp)+,a0
+	rts
+
+.str	dc.b	"fail ",0
+	even
+
+log_str_eol:
+	move.l	a0,-(sp)
+	lea	.str,a0
+	bsr	log_strz
+	move.l	(sp)+,a0
+	rts
+
+.str	dc.b	$0a,0
+	even
+	
+	
+log_overflow:
+	move.l	#"log ",log
+	move.l	#"over",log+4
+	move.l	#"flow",log+8
+	rts
+
+
+
+log_current_ptr:	dc.l log
+;log_save_d0:	dc.l $00000000
+;log_save_a1:	dc.l $00000000	
+
+log:            blk.b 1000*100,$00
+log_buffer_end:
+	; final zero ending here in case we 
+	; fill the entire log
+	dc.b	$00
+	even
+
+	; Just spend some time to test Disable/reenable system stuff
+;	moveq	#9,d0
+;.loopa	moveq	#-1,d1
+;.loopb	dbf	d1,.loopb
+;	dbf	d0,.loopa
+
+
+	; include test suite
+	
+	include	"sys:test_suite.s"
+
+end_of_all_code:
