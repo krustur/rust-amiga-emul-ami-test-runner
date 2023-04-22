@@ -154,6 +154,7 @@ run_test
 	; Act: Collect regs
 
 	move.w	sr,collected_sr
+	and.w	#$001f,collected_sr
 	move.l	d0,collected_regs+$00
 	move.l	d1,collected_regs+$04
 	move.l	d2,collected_regs+$08
