@@ -1,4 +1,4 @@
-;APS000000CA000014D000001636000013EB000014D0000014D0000014D0000014D0000014D0000014D0
+;APS000000C8000019B300001B18000018CE000019B3000019B3000019B3000019B3000019B3000019B3
 ;---------------T---------T---------------------T------------------
 
 LVOSupervisor	equ	-30
@@ -28,14 +28,19 @@ start
 
 test_loop
 	; Fetch next test
-	; Exit if no more tests
-	; Point to next test
 	
 	move.l	next_test,a0
 	move.l	(a0)+,d0
+
+	; Exit if no more tests
+
 	beq	exit
+
+	; Point to next test
+
 	move.l	a0,next_test
 
+	; Run test in supervisor mode
 	move.l	d0,a0
 	lea	run_test,a5
 	move.l	$4,a6
