@@ -134,23 +134,9 @@ run_test
 	and.w	#$ffe0,d1
 	or.w	d1,d0
 	move.w	d0,sr
+
+	; Regs
 	
-	;move.l	(a7)+,d0
-	;move.l	(a7)+,d1
-	;move.l	(a7)+,d2
-	;move.l	(a7)+,d3
-	;move.l	(a7)+,d4
-	;move.l	(a7)+,d5
-	;move.l	(a7)+,d6
-	;move.l	(a7)+,d7
-	;move.l	(a7)+,a0
-	;move.l	(a7)+,a1
-	;move.l	(a7)+,a2
-	;move.l	(a7)+,a3
-	;move.l	(a7)+,a4
-	;move.l	(a7)+,a5
-	;move.l	(a7)+,a6
-	;move.l	(a7)+,a7
 	movem.l	(a7)+,d0-d7/a0-a7	; movem doesnt affect SR		
 
 	; Act: Run test!
