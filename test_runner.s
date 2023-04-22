@@ -131,11 +131,13 @@ run_test
 	move.w	sr,d1
 	and.w	#$ffe0,d1
 	or.w	d1,d0
-	move.w	d0,sr
+	move.w	d0,arrange_sr
 
 	; Regs
 	
-	movem.l	(a7)+,d0-d7/a0-a7	; movem doesnt affect SR		
+	movem.l	(a7)+,d0-d7/a0-a6
+	move.l	(a7),a7
+	move.w	arrange_sr,sr
 
 	; Act: Run test!
 	
