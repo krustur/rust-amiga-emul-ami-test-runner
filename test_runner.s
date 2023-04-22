@@ -103,6 +103,7 @@ run_test
 
 		
 	; Arrange: Memory areas
+
 	; Arrange: Code
 
 	move.l	test_offset_act_code(a5),a0
@@ -129,11 +130,10 @@ run_test
 	move.l	$4.w,a6
 	jsr	LVOCacheClearU(a6)
 
-	; Backup&Safety: Stack ?
+	; Backup&Safety: Stack Pointer
 
 	move.l	sp,sp_backup
 
-	; Arrange: Stack
 	; Arrange: A-/D-regs + SR
 
 	move.l	test_offset_arrange_regs(a5),a7
@@ -212,6 +212,8 @@ run_test
 
 	; Assert: Check if ok/fail
 
+	; Registers
+
 	move.l	current_test,a5
 	move.l	test_offset_assert_regs(a5),a0
 	
@@ -266,6 +268,8 @@ run_test
 	move.w	collected_sr,d0	; SR
 	cmp.w	$40(a0),d0
 	bne.s	.fail
+
+	; Memory
 
 	; ok!
 	
