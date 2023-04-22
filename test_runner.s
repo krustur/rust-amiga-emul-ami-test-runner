@@ -14,6 +14,8 @@ _LVOWaitTOF		equ -270
 _LVOOwnBlitter		equ -456
 _LVODisownBlitter	equ -462
 
+_LVOPutString		equ -948
+
 gb_ActiView		equ 34	; ?
 gb_copinit		equ 38	; ?
 
@@ -48,9 +50,25 @@ start
 	beq.w	exit
 	move.l	d0,gfx_base
 
+	; Open dos.library
+	lea	dos_name(pc),a1
+	moveq	#34,d0
+	jsr	_LVOOpenLibrary(a6)
+	tst.l	d0
+	beq.w	exit
+	move.l	d0,dos_base
+
+	; Open intuition.library
+	lea	intuition_name(pc),a1
+	moveq	#36,d0
+	jsr	_LVOOpenLibrary(a6)
+	tst.l	d0
+	beq.w	exit
+	move.l	d0,intuition_base
+
 	; Own blitter
-	
-	move.l	d0,a6
+
+	move.l	gfx_base,a6
 	jsr	_LVOOwnBlitter(a6)
 	jsr	_LVOWaitBlit(a6)
 	
@@ -144,6 +162,12 @@ exit
 	move.l	gfx_base,a6
 	jsr	_LVODisownBlitter(a6)
 
+	; Print log
+
+	move.l	dos_base,a6
+	move.l	#log,d1
+	jsr	_LVOPutString(a6)
+
 	; Close libraries
 
 	move.l	$4.w,a6
@@ -153,6 +177,18 @@ exit
 	jsr	_LVOCloseLibrary(a6)
 	move.l	#-1,gfx_base
 .no_gfx_base
+	move.l	dos_base,d0
+	beq.s	.no_dos_base
+	move.l	d0,a1
+	jsr	_LVOCloseLibrary(a6)
+	move.l	#-1,dos_base
+.no_dos_base
+	move.l	intuition_base,d0
+	beq.s	.no_intuition_base
+	move.l	d0,a1
+	jsr	_LVOCloseLibrary(a6)
+	move.l	#-1,intuition_base
+.no_intuition_base
 	
 
 	move.l	save_global_sp,sp
@@ -172,10 +208,12 @@ save_actiview	dc.l	$0
 save_copinit	dc.l	$0
 
 gfx_name	dc.b	"graphics.library",0
+dos_name	dc.b	"dos.library",0
 intuition_name	dc.b	"intuition.library",0
 	align	0,2
 	;even
 gfx_base	dc.l	$0
+dos_base	dc.l	$0
 intuition_base	dc.l	$0
 
 next_test	dc.l	$0
