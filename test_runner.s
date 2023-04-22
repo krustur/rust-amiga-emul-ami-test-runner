@@ -8,9 +8,9 @@ LVOCacheClearU	equ	-636
 
 jmp_instr	equ	$4ef9
 
-start_of_all_code:
+start_of_all_code
 
-start:
+start
 	;; Disable system
 		
 	movem.l	d0-d7/a0-a6,-(sp)
@@ -26,7 +26,7 @@ start:
 	move.l	a0,next_test
 
 
-test_loop:
+test_loop
 	; Fetch next test
 	; Exit if no more tests
 	; Point to next test
@@ -46,7 +46,7 @@ test_loop:
 	
 	bra	test_loop
 
-exit:
+exit
 	; Reenable system
 
 	move.l	$4.w,a6
@@ -59,8 +59,8 @@ exit:
 	add.b	#1,d0
 	rts
 
-save_global_sp:	dc.l	$0
-next_test:	dc.l	$0
+save_global_sp	dc.l	$0
+next_test	dc.l	$0
 
 
 ;
@@ -69,7 +69,7 @@ next_test:	dc.l	$0
 ; param:
 ;  A0 = test
 
-run_test:
+run_test
 	;; A5 = test
 	
 	move.l	a0,a5
@@ -163,7 +163,7 @@ run_test:
 
 	; the test will jmp back to this address 
 	; after test code is run
-.return_here_after_test:
+.return_here_after_test
 
 	; Act: Collect regs
 
@@ -228,21 +228,21 @@ run_test:
 
 	rte
 
-current_test:	dc.l	$00000000
-collected_sr:	dc.w	$0000
-collected_regs:	blk.l	16,$00000000
+current_test	dc.l	$00000000
+collected_sr	dc.w	$0000
+collected_regs	blk.l	16,$00000000
 
-code_backup:	blk.b	512,$00
-code_copy:	blk.b	512,$00
-sp_backup:	dc.l	$00000000
+code_backup	blk.b	512,$00
+code_copy	blk.b	512,$00
+sp_backup	dc.l	$00000000
 
-code_temp:	moveq	#2,d0
+code_temp	moveq	#2,d0
 
  
 
 ; Logger functions
 
-log_strz:
+log_strz
 	movem.l	d0/a1-a2,-(sp)
 	;move.l	d0,log_save_d0
 	;move.l	a1,log_save_a1
@@ -273,7 +273,7 @@ log_strz:
 	movem.l	(sp)+,d0/a1-a2
 	rts
 
-log_str_ok:
+log_str_ok
 	move.l	a0,-(sp)
 	lea	.str,a0
 	bsr	log_strz
@@ -283,7 +283,7 @@ log_str_ok:
 .str	dc.b	"  ok ",0
 	even
 	
-log_str_fail:
+log_str_fail
 	move.l	a0,-(sp)
 	lea	.str,a0
 	bsr	log_strz
@@ -293,7 +293,7 @@ log_str_fail:
 .str	dc.b	"fail ",0
 	even
 
-log_str_eol:
+log_str_eol
 	move.l	a0,-(sp)
 	lea	.str,a0
 	bsr	log_strz
@@ -304,7 +304,7 @@ log_str_eol:
 	even
 	
 	
-log_overflow:
+log_overflow
 	move.l	#"log ",log
 	move.l	#"over",log+4
 	move.l	#"flow",log+8
@@ -312,12 +312,12 @@ log_overflow:
 
 
 
-log_current_ptr:	dc.l log
-;log_save_d0:	dc.l $00000000
-;log_save_a1:	dc.l $00000000	
+log_current_ptr	dc.l log
+;log_save_d0	dc.l $00000000
+;log_save_a1	dc.l $00000000	
 
-log:            blk.b 1000*100,$00
-log_buffer_end:
+log	blk.b 1000*100,$00
+log_buffer_end
 	; final zero ending here in case we 
 	; fill the entire log
 	dc.b	$00
@@ -334,4 +334,4 @@ log_buffer_end:
 	
 	include	"dev:github/rust-amiga-emul-ami-test-runner/test_suite.s"
 
-end_of_all_code:
+end_of_all_code
