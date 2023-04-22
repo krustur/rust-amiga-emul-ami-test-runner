@@ -407,33 +407,99 @@ run_test
 	
 	move.l	collected_regs+$00,d0	; D0
 	move.l	$00(a4),d1
-	moveq	#"D",d2
-	moveq	#0,d3
-	bsr.s	.fail_details
+	move.w	#"D0",d2
+	bsr.w	.fail_reg_details
 	move.l	collected_regs+$04,d0	; D1
 	move.l	$04(a4),d1
-	moveq	#"D",d2
-	moveq	#1,d3
-	bsr.s	.fail_details
+	move.w	#"D1",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$08,d0	; D2
+	move.l	$08(a4),d1
+	move.w	#"D2",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$0c,d0	; D3
+	move.l	$0c(a4),d1
+	move.w	#"D3",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$10,d0	; D4
+	move.l	$10(a4),d1
+	move.w	#"D4",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$04,d0	; D5
+	move.l	$14(a4),d1
+	move.w	#"D5",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$18,d0	; D6
+	move.l	$18(a4),d1
+	move.w	#"D6",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$1c,d0	; D7
+	move.l	$1c(a4),d1
+	move.w	#"D7",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$20,d0	; A0
+	move.l	$20(a4),d1
+	move.w	#"A0",d2
+	bsr.w	.fail_reg_details
+	move.l	collected_regs+$24,d0	; A1
+	move.l	$24(a4),d1
+	move.w	#"A1",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$28,d0	; A2
+	move.l	$28(a4),d1
+	move.w	#"A2",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$2c,d0	; A3
+	move.l	$2c(a4),d1
+	move.w	#"A3",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$30,d0	; A4
+	move.l	$30(a4),d1
+	move.w	#"A4",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$34,d0	; A5
+	move.l	$34(a4),d1
+	move.w	#"A5",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$38,d0	; A6
+	move.l	$38(a4),d1
+	move.w	#"A6",d2
+	bsr.s	.fail_reg_details
+	move.l	collected_regs+$3c,d0	; A7
+	move.l	$3c(a4),d1
+	move.w	#"A7",d2
+	bsr.s	.fail_reg_details
+	moveq	#0,d0	; SR
+	moveq	#0,d1
+	move.w	collected_sr,d0
+	move.w	$40(a4),d1
+	move.w	#"SR",d2
+	bsr.s	.fail_reg_details
 
 	; Assert: Log fail details
 
 
 	rte
 
-.fail_details
+.fail_reg_details
+	; d0=was
+	; d1=expected
 	cmp.l	d0,d1
-	beq.s	.d0_ok
-	move.b	d2,.fail_reg_strz
-	add.b	#"0",d3
-	move.b	d3,.fail_reg_strz+1
+	beq.s	.fail_reg_ok
+	move.w	d2,.fail_reg_strz
+	lea	.fail_reg_strzb,a0
+	bsr.w	hex_to_str
+	move.l	d1,d0
+	lea	.fail_reg_strza,a0
+	bsr.w	hex_to_str
 	lea	.fail_reg_strz,a0
 	bsr.w	log_strz
-	
-.d0_ok
+.fail_reg_ok
 	rts
 
-.fail_reg_strz	dc.b	"XX: expected $XXXXXXXX - was $XXXXXXXX",$a,0
+.fail_reg_strz	dc.b	"XX: expected $"
+.fail_reg_strza	dc.b	"XXXXXXXX - was $"
+.fail_reg_strzb	dc.b	"XXXXXXXX",$a,0
 	align	0,2
 	
 
@@ -524,7 +590,24 @@ log_overflow
 	move.l	#"flow",log+8
 	rts
 
+hex_to_str
+	movem.l	d1-d2/a1,-(sp)
+	lea	hex_char_table,a1
+	add.l	#8,a0
+	moveq	#8-1,d2
+.loop
+	move.b	d0,d1
+	and.b	#$0f,d1
 
+	move.b	(a1,d1),-(a0)
+
+	ror.l	#4,d0
+	dbra	d2,.loop
+	movem.l	(sp)+,d1-d2/a1
+	rts
+	
+hex_char_table
+	dc.b	"0123456789ABCDEF"
 
 log_current_ptr	dc.l log
 ;log_save_d0	dc.l $00000000
