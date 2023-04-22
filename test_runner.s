@@ -1,12 +1,34 @@
 ;APS000000C8000019B300001B18000018CE000019B3000019B3000019B3000019B3000019B3000019B3
 ;---------------T---------T---------------------T------------------
 
-LVOSupervisor	equ	-30
-LVOForbid	equ	-132
-LVOPermit	equ	-138
-LVOCacheClearU	equ	-636
+LVOSupervisor		equ -30
+LVOForbid		equ -132
+LVOPermit		equ -138
+LVOCacheClearU		equ -636
+_LVOOpenLibrary		equ -552
+_LVOCloseLibrary	equ -414
 
-jmp_instr	equ	$4ef9
+_LVOLoadView		equ -222
+_LVOWaitBlit		equ -228
+_LVOWaitTOF		equ -270
+_LVOOwnBlitter		equ -456
+_LVODisownBlitter	equ -462
+
+gb_ActiView		equ 34	; ?
+gb_copinit		equ 38	; ?
+
+dmaconr		equ $002
+cop1lc		equ $080
+dmacon		equ $096
+
+jmp_instr		equ $4ef9
+
+WAIT_VBL	MACRO
+.sync\@	btst	#0,$dff005
+	beq.s	.sync\@
+.sync2\@	btst	#0,$dff005
+	bne.s	.sync2\@
+	ENDM
 
 start_of_all_code
 
@@ -16,10 +38,46 @@ start
 	movem.l	d0-d7/a0-a6,-(sp)
 	move.l	sp,save_global_sp
 
+	; Open graphics.library
+
+	move.l	$4.w,a6
+	lea	gfx_name(pc),a1
+	moveq	#36,d0
+	jsr	_LVOOpenLibrary(a6)
+	tst.l	d0
+	beq.w	exit
+	move.l	d0,gfx_base
+
+	; Own blitter
+	
+	move.l	d0,a6
+	jsr	_LVOOwnBlitter(a6)
+	jsr	_LVOWaitBlit(a6)
+	
+	; Forbid multitask
+	
 	move.l	$4.w,a6
 	jsr	LVOForbid(a6)
 
+	; Blank screen
 
+	move.l	gfx_base,a6
+	move.l	(gb_ActiView,a6),save_actiview
+	move.l	(gb_copinit,a6),save_copinit
+
+	sub.l	a0,a0
+	jsr	_LVOLoadView(a6)
+	jsr	_LVOWaitTOF(a6)
+	jsr	_LVOWaitTOF(a6)
+
+	; Disable DMA
+
+	lea	$dff000,a5
+	move.w	dmaconr(a5),d0
+	move.w	d0,save_dmacon
+	WAIT_VBL
+	move.w	#$7fff,dmacon(a5)
+	
 	; Setup test-runner
 	
 	lea	test_suite,a0
@@ -54,19 +112,71 @@ test_loop
 exit
 	; Reenable system
 
+	; Restore copper and DMA
+
+	WAIT_VBL
+	lea	$dff000,a6
+	move.l	save_copinit,cop1lc(a6)
+	move.w	save_dmacon,d0
+	or.w	#$8000,d0
+	move.w	d0,dmacon(a6)
+
+	; Permit multitasking
+
 	move.l	$4.w,a6
 	jsr	LVOPermit(a6)
+
+
+	; Restore view
+
+	move.l	gfx_base,a6
+	move.l	save_actiview,a1
+	jsr	_LVOLoadView(a6)
+	jsr	_LVOWaitTOF(a6)
+	jsr	_LVOWaitTOF(a6)
+	
+;;	move.l	intuition_base,a6
+;;	jsr	_LVORethinkDisplay(a6)
+	
+	
+	; Disown blitter
+
+	move.l	gfx_base,a6
+	jsr	_LVODisownBlitter(a6)
+
+	; Close libraries
+
+	move.l	$4.w,a6
+	move.l	gfx_base,d0
+	beq.s	.no_gfx_base
+	move.l	d0,a1
+	jsr	_LVOCloseLibrary(a6)
+	move.l	#-1,gfx_base
+.no_gfx_base
 	
 	move.l	save_global_sp,sp
 	movem.l	(sp)+,d0-d7/a0-a6
 
-	move.l	test_count_tot,d0
-	move.l	test_count_ok,d1
-	move.l	test_count_fail,d2
+	; Set D-regs to show test counts
+	
+;	move.l	test_count_tot,d0
+;	move.l	test_count_ok,d1
+;	move.l	test_count_fail,d2
 
 	rts
 
 save_global_sp	dc.l	$0
+save_dmacon	dc.w	$0
+save_actiview	dc.l	$0
+save_copinit	dc.l	$0
+
+gfx_name	dc.b	"graphics.library",0
+intuition_name	dc.b	"intuition.library",0
+	align	0,2
+	;even
+gfx_base	dc.l	$0
+intuition_base	dc.l	$0
+
 next_test	dc.l	$0
 
 
@@ -122,8 +232,8 @@ run_test
 	dbf	d0,.copy_test_code_loop	
 	move.w	#jmp_instr,(a1)+
 	move.w	#jmp_instr,(a2)+
-	move.l	#.return_here_after_test,(a1)+
-	move.l	#.return_here_after_test,(a2)+
+	move.l	#.return_here_after_test,(a1)
+	move.l	#.return_here_after_test,(a2)
 
 	; Arrange: Clear caches
 
@@ -243,7 +353,7 @@ run_test
 	bne.w	.fail
 	move.l	collected_regs+$20,d0	; A0
 	cmp.l	$20(a0),d0
-	bne.s	.fail
+	bne.w	.fail
 	move.l	collected_regs+$24,d0	; A1
 	cmp.l	$24(a0),d0
 	bne.s	.fail
@@ -306,8 +416,8 @@ arrange_sr	dc.w	$0000
 collected_sr	dc.w	$0000
 collected_regs	blk.l	16,$00000000
 
-code_backup	blk.b	512,$00
-code_copy	blk.b	512,$00
+code_backup	blk.b	512,$ff
+code_copy	blk.b	512,$ff
 sp_backup	dc.l	$00000000
 
 code_temp	moveq	#2,d0
@@ -396,13 +506,6 @@ log_buffer_end
 	; fill the entire log
 	dc.b	$00
 	even
-
-	; Just spend some time to test Disable/reenable system stuff
-;	moveq	#9,d0
-;.loopa	moveq	#-1,d1
-;.loopb	dbf	d1,.loopb
-;	dbf	d0,.loopa
-
 
 	; include test suite
 	
