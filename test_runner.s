@@ -673,6 +673,7 @@ hex_to_str
 	movem.l	d1-d2/a1,-(sp)
 	lea	hex_char_table,a1
 	add.l	#8,a0
+	moveq	#0,d1
 	moveq	#8-1,d2
 .loop
 	move.b	d0,d1
