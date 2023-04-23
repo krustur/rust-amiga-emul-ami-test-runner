@@ -240,7 +240,7 @@ run_test
 	; Backup&Safety: Memory areas
 	; Backup&Safety: Code
 
-	move.l	test_offset_act_code(a5),a0
+	move.l	test_offs_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
 	move.l	(a0)+,a1	; a1 = code target address
 			; a0 = code source address (ignored)
@@ -257,7 +257,7 @@ run_test
 
 	; Arrange: Code
 
-	move.l	test_offset_act_code(a5),a0
+	move.l	test_offs_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
 	move.l	(a0)+,a1	; a1 = code target address
 			; a0 = code source address
@@ -287,7 +287,7 @@ run_test
 
 	; Arrange: A-/D-regs + SR
 
-	move.l	test_offset_arrange_regs(a5),a7
+	move.l	test_offs_arrange_regs(a5),a7
 
 	; SR
 
@@ -343,7 +343,7 @@ run_test
 	; Restore: Code
 
 	move.l	current_test,a5
-	move.l	test_offset_act_code(a5),a0
+	move.l	test_offs_code(a5),a0
 	move.l	(a0)+,d0		; d0 = code length
 	move.l	(a0)+,a1		; a1 = code target address
 				; a0 = code source address
@@ -366,7 +366,11 @@ run_test
 	; Registers
 
 	move.l	current_test,a5
-	move.l	test_offset_assert_regs(a5),a0
+	move.l	test_offs_assert_regs(a5),a0
+
+	; Registers
+
+	move.l	test_offs_assert_regs(a5),a0
 	
 	move.l	collected_regs+$00,d0	; D0
 	cmp.l	$00(a0),d0
@@ -443,7 +447,7 @@ run_test
 	bsr	log_strz
 	bsr	log_str_eol
 
-	move.l	test_offset_assert_regs(a5),a4
+	move.l	test_offs_assert_regs(a5),a4
 	
 	move.l	collected_regs+$00,d0	; D0
 	move.l	$00(a4),d1

@@ -6,12 +6,12 @@ test_suite
 	; no more tests
 	dc.l	$0
 
-test_offset_name		equ	$00
-test_offset_arrange_memory_list	equ	$04
-test_offset_arrange_regs	equ	$08
-test_offset_act_code		equ	$0c
-test_offset_assert_memory_list	equ	$10
-test_offset_assert_regs		equ	$14
+test_offs_name		equ	$00
+test_offs_arrange_mem	equ	$04
+test_offs_arrange_regs	equ	$08
+test_offs_code		equ	$0c
+test_offs_assert_mem	equ	$10
+test_offs_assert_regs	equ	$14
 
 LSL_B_register_by_immediate
  dc.l .name		; $00
