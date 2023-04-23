@@ -21,8 +21,10 @@ gb_ActiView		equ 34	; ?
 gb_copinit		equ 38	; ?
 
 dmaconr		equ $002
+intenar		equ $01c
 cop1lc		equ $080
 dmacon		equ $096
+intena		equ $09a
 
 jmp_instr		equ $4ef9
 
@@ -78,6 +80,11 @@ start
 	move.l	$4.w,a6
 	jsr	LVOForbid(a6)
 
+	lea	$dff000,a5
+	move.w	intenar(a5),d0
+	move.w	d0,save_intena
+	move.w	#$7fff,intena(a5)
+	
 	; Blank screen
 
 	move.l	gfx_base,a6
@@ -101,7 +108,6 @@ start
 	
 	lea	test_suite,a0
 	move.l	a0,next_test
-
 
 test_loop
 	; Fetch next test
@@ -158,6 +164,11 @@ exit
 
 	; Permit multitasking
 
+	lea	$dff000,a6
+	move.w	save_intena,d0
+	or.w	#$8000,d0
+	move.w	d0,intena(a6)
+	
 	move.l	$4.w,a6
 	jsr	LVOPermit(a6)
 
@@ -221,6 +232,7 @@ exit
 
 save_global_sp	dc.l	$0
 save_dmacon	dc.w	$0
+save_intena	dc.w	$0
 save_actiview	dc.l	$0
 save_copinit	dc.l	$0
 
