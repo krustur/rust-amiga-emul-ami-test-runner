@@ -281,7 +281,7 @@ run_test
 	; Backup&Safety: Memory areas
 	; Backup&Safety: Code
 
-	move.l	test_offs_code(a5),a0
+	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
 	move.l	(a0)+,a1	; a1 = code target address
 			; a0 = code source address (ignored)
@@ -297,7 +297,7 @@ run_test
 
 	; Arrange: Code
 
-	move.l	test_offs_code(a5),a0
+	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
 	move.l	(a0)+,a1	; a1 = code target address
 			; a0 = code source address
@@ -382,7 +382,7 @@ run_test
 	; Restore: Code
 
 	move.l	current_test,a5
-	move.l	test_offs_code(a5),a0
+	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0)+,d0		; d0 = code length
 	move.l	(a0)+,a1		; a1 = code target address
 				; a0 = code source address
@@ -405,10 +405,10 @@ run_test
 	; Code
 
 	move.l	current_test,a5
-	move.l	test_offs_code(a5),a0
+	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0),d0
 	add.l	#8,a0
-	lea.l	(a0,d0.l*2),a1
+	move.l	test_offs_assert_code(a5),a1
 	subq	#1,d0
 	move.b	#false,.code_failed
 .check_code_loop
