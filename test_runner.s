@@ -246,7 +246,6 @@ run_test
 			; a0 = code source address (ignored)
 
 	lea	code_backup,a2
-	;asr.l	#1,d0
 	addq.l	#3-1,d0	; 3 extra word for jmp back
 .backup_code_loop
 	move.w	(a1)+,(a2)+
@@ -265,7 +264,6 @@ run_test
 	move.l	a1,.test_jmp_address
 	
 	lea	code_copy,a2
-	;asr.l	#1,d0
 	subq	#1,d0
 .copy_test_code_loop
 	move.w	(a0),(a1)+
@@ -349,7 +347,6 @@ run_test
 				; a0 = code source address
 
 	lea	code_backup,a2
-	;asr.l	#1,d0
 	addq.l	#3-1,d0
 .restore_code_loop 
 	move.w	(a2)+,(a1)+
