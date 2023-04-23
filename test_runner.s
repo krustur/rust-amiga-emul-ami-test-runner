@@ -14,6 +14,8 @@ _LVOWaitTOF		equ -270
 _LVOOwnBlitter		equ -456
 _LVODisownBlitter	equ -462
 
+_LVORethinkDisplay	equ -390
+
 _LVOPutString		equ -948
 
 gb_ActiView		equ 34	; ?
@@ -153,8 +155,8 @@ exit
 	jsr	_LVOWaitTOF(a6)
 	jsr	_LVOWaitTOF(a6)
 	
-;;	move.l	intuition_base,a6
-;;	jsr	_LVORethinkDisplay(a6)
+	move.l	intuition_base,a6
+	jsr	_LVORethinkDisplay(a6)
 	
 	
 	; Disown blitter
