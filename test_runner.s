@@ -613,26 +613,28 @@ run_test
 .fail_reg_details
 	; d0=was
 	; d1=expected
+	; d2=reg ascii (word)
 	cmp.l	d0,d1
 	beq.s	.fail_reg_ok
-	move.w	d2,.fail_reg_strz
-	lea	.fail_reg_strzb,a0
+	move.w	d2,.fail_reg_strza
+	lea	.fail_reg_strzc,a0
 	bsr.w	hex_to_str
 	move.l	d1,d0
-	lea	.fail_reg_strza,a0
+	lea	.fail_reg_strzb,a0
 	bsr.w	hex_to_str
 	lea	.fail_reg_strz,a0
 	bsr.w	log_strz
 .fail_reg_ok
 	rts
 
-.fail_reg_strz	dc.b	"XX: expected $"
-.fail_reg_strza	dc.b	"XXXXXXXX - was $"
-.fail_reg_strzb	dc.b	"XXXXXXXX",$a,0
+.fail_reg_strz	dc.b	"     "
+.fail_reg_strza dc.b	"XX: expected $"
+.fail_reg_strzb	dc.b	"XXXXXXXX - was $"
+.fail_reg_strzc	dc.b	"XXXXXXXX",$a,0
 
-.fail_code_strz	dc.b	"Code:",$a
-		dc.b	" expected ",0
-.fail_codeb_strz dc.b	" was      ",0
+.fail_code_strz	dc.b	"     Code:",$a
+	dc.b	"      expected ",0
+.fail_codeb_strz dc.b	"      was      ",0
 
 .code_failed	dc.b	0
 		align	0,2
