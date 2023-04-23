@@ -118,6 +118,7 @@ test_loop
 	move.l	a0,next_test
 
 	; Run test in supervisor mode
+
 	move.l	d0,a0
 	lea	run_test,a5
 	move.l	$4,a6
@@ -142,15 +143,6 @@ done
 	bsr	log_str_eol
 	lea	test_summary_strz,a0
 	bsr	log_strz
-
-;test_summary_total
-;	dc.b	"xxxxxxxx",$a
-;	dc.b	"Ok tests: $"
-;test_summary_ok
-;	dc.b	"xxxxxxxx",$a
-;	dc.b	"Failed tests: "
-;test_summare_failed
-
 
 exit
 	; Reenable system
