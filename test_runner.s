@@ -109,9 +109,9 @@ test_loop
 	move.l	next_test,a0
 	move.l	(a0)+,d0
 
-	; Exit if no more tests
+	; Done when no more tests
 
-	beq	exit
+	beq	done
 
 	; Point to next test
 
@@ -127,6 +127,30 @@ test_loop
 	; Loop tests
 	
 	bra	test_loop
+
+done
+	lea	test_summary_total,a0
+	move.l	test_count_tot,d0
+	bsr	hex_to_str
+	lea	test_summary_ok,a0
+	move.l	test_count_ok,d0
+	bsr	hex_to_str
+	lea	test_summary_failed,a0
+	move.l	test_count_fail,d0
+	bsr	hex_to_str
+
+	bsr	log_str_eol
+	lea	test_summary_strz,a0
+	bsr	log_strz
+
+;test_summary_total
+;	dc.b	"xxxxxxxx",$a
+;	dc.b	"Ok tests: $"
+;test_summary_ok
+;	dc.b	"xxxxxxxx",$a
+;	dc.b	"Failed tests: "
+;test_summare_failed
+
 
 exit
 	; Reenable system
@@ -219,6 +243,17 @@ intuition_base	dc.l	$0
 
 next_test	dc.l	$0
 
+test_summary_strz
+	dc.b	"Total tests: $"
+test_summary_total
+	dc.b	"xxxxxxxx",$a
+	dc.b	"Ok tests: $"
+test_summary_ok
+	dc.b	"xxxxxxxx",$a
+	dc.b	"Failed tests: "
+test_summary_failed
+	dc.b	"xxxxxxxx",$a,0
+	align	0,2
 
 ;
 ; note: This is run in Supervisor mode so we can arrange and assert SR
