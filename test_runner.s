@@ -510,9 +510,25 @@ run_test
 
 	lea	.fail_code_strz,a0
 	bsr	log_strz
+
+	move.l	current_test,a5
+	move.l	test_offs_arrange_code(a5),a0
+	move.l	(a0),d0
+	asl.l	#1,d0
+	add.l	#8,a0
+	bsr	log_hex_dump
 	bsr	log_str_eol
+	
 	lea	.fail_codeb_strz,a0
 	bsr	log_strz
+
+	move.l	current_test,a5
+	move.l	test_offs_arrange_code(a5),a0
+	move.l	(a0),d0
+	asl.l	#1,d0
+	move.l	test_offs_assert_code(a5),a0
+	bsr	log_hex_dump
+
 	bsr	log_str_eol
 	
 .no_code_fail_log
@@ -659,7 +675,7 @@ log_strz
 	bra.s	.loop
 
 .overflow
-	bsr.s	log_overflow
+	bsr.w	log_overflow
 ;	bra	.done
 
 .done
@@ -700,7 +716,51 @@ log_str_eol
 
 .str	dc.b	$0a,0
 	even
+
+log_hex_dump
+	movem.l	d1-d3/a1-a3,-(sp)
+
+	subq	#1,d0
+
+	move.l	log_current_ptr,a1
+	lea.l	log_buffer_end,a2
+	lea	hex_char_table,a3
+
+	moveq	#0,d1
+	moveq	#0,d2
+.loop
+	cmp.l	a1,a2
+	beq.s	.overflow
+
+	move.b	(a0)+,d1
+
+	move.b	d1,d2
+	lsr.b	#4,d2
+	move.b	(a3,d2),(a1)+
+
+	cmp.l	a1,a2
+	beq.s	.overflow
+
+
+	and.b	#$0f,d1
+	move.b	(a3,d1),(a1)+
+
+	cmp.l	a1,a2
+	beq.s	.overflow
+
+	move.b	#" ",(a1)+
 	
+	dbf	d0,.loop
+	bra.s	.done
+
+.overflow
+	bsr.s	log_overflow
+
+.done
+	move.l	a1,log_current_ptr
+
+	movem.l	(sp)+,d1-d3/a1-a3
+	rts
 	
 log_overflow
 	move.l	#"log ",log
