@@ -17,14 +17,17 @@ _LVORethinkDisplay	equ -390
 
 _LVOPutString		equ -948
 
-gb_ActiView		equ 34	; ?
-gb_copinit		equ 38	; ?
+gb_ActiView	equ 34	; ?
+gb_copinit	equ 38	; ?
 
-dmaconr		equ $002
-intenar		equ $01c
-cop1lc		equ $080
-dmacon		equ $096
-intena		equ $09a
+dmaconr	equ $002
+intenar	equ $01c
+cop1lc	equ $080
+dmacon	equ $096
+intena	equ $09a
+
+true	equ $00	; can use beq for if true
+false	equ $01	; can use bne for if not true
 
 jmp_instr		equ $4ef9
 
@@ -398,10 +401,22 @@ run_test
 
 	; Assert: Check if ok/fail
 
-	; Registers
+
+	; Code
 
 	move.l	current_test,a5
-	move.l	test_offs_assert_regs(a5),a0
+	move.l	test_offs_code(a5),a0
+	move.l	(a0),d0
+	add.l	#8,a0
+	lea.l	(a0,d0.l*2),a1
+	subq	#1,d0
+	move.b	#false,.code_failed
+.check_code_loop
+	move.w	(a0)+,d1
+	move.w	(a1)+,d2
+	cmp.w	d1,d2
+	bne.w	.code_fail
+	dbf	d0,.check_code_loop	
 
 	; Registers
 
@@ -473,14 +488,36 @@ run_test
 	rte
 
 	; fail!
+.code_fail
+	move.b	#true,.code_failed
+	
+
 .fail
 	add.l	#1,test_count_fail
+
+	; Assert: Log failed test
 
 	move.l	current_test,a5
 	bsr	log_str_fail
 	move.l	(a5),a0
 	bsr	log_strz
 	bsr	log_str_eol
+
+	; Assert: Log failed code
+
+	move.b	.code_failed,d0
+	bne.s	.no_code_fail_log
+
+	lea	.fail_code_strz,a0
+	bsr	log_strz
+	bsr	log_str_eol
+	lea	.fail_codeb_strz,a0
+	bsr	log_strz
+	bsr	log_str_eol
+	
+.no_code_fail_log
+
+	; Assert: Log fail details - regs
 
 	move.l	test_offs_assert_regs(a5),a4
 	
@@ -555,9 +592,6 @@ run_test
 	move.w	#"SR",d2
 	bsr.s	.fail_reg_details
 
-	; Assert: Log fail details
-
-
 	rte
 
 .fail_reg_details
@@ -579,8 +613,13 @@ run_test
 .fail_reg_strz	dc.b	"XX: expected $"
 .fail_reg_strza	dc.b	"XXXXXXXX - was $"
 .fail_reg_strzb	dc.b	"XXXXXXXX",$a,0
-	align	0,2
-	
+
+.fail_code_strz	dc.b	"Code:",$a
+		dc.b	" expected ",0
+.fail_codeb_strz dc.b	" was      ",0
+
+.code_failed	dc.b	0
+		align	0,2
 
 current_test	dc.l	$00000000
 test_count_tot	dc.l	$00000000
