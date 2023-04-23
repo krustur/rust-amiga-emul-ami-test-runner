@@ -1,63 +1,6 @@
-;APS00001FDF00001FDF0000213400001F5100001FDF00001FDF00001FDF00001FDF00001FDF00001FDF
-test_suite:
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate+$18
-	dc.l	LSL_B_register_by_immediate
+;APS00001EFA00001EFA0000204F00001E6C00001EFA00001EFA00001EFA00001EFA00001EFA00001EFA
+
+test_suite
 	dc.l	LSL_B_register_by_immediate
 	dc.l	LSL_B_register_by_immediate+$18
 	; no more tests
@@ -71,63 +14,52 @@ test_offset_assert_memory_list	equ	$10
 test_offset_assert_regs		equ	$14
 
 LSL_B_register_by_immediate
- dc.l .name                  ; $00
- dc.l .arrange_memory_list   ; $04
- dc.l .arrange_regs          ; $08
- dc.l .act_code              ; $0c
- dc.l .assert_memory_list    ; $10
- dc.l .assert_regs           ; $14
+ dc.l .name		; $00
+ dc.l .arrange_mem	; $04
+ dc.l .arrange_regs	; $08
+ dc.l .code		; $0c
+ dc.l .assert_mem	; $10
+ dc.l .assert_regs	; $14
 
-; LSL_B_register_by_immediate_fail
- dc.l .name                  ; $00
- dc.l .arrange_memory_list   ; $04
- dc.l .arrange_regs          ; $08
- dc.l .act_code_fail         ; $0c
- dc.l .assert_memory_list    ; $10
- dc.l .assert_regs           ; $14
+ dc.l .name		; $00 ; LSL_B_register_by_immediate_fail
+ dc.l .arrange_mem	; $04
+ dc.l .arrange_regs	; $08
+ dc.l .code_fail	; $0c
+ dc.l .assert_mem	; $10
+ dc.l .assert_regs	; $14
 
 .name
  dc.b "LSL_B_register_by_immediate",0
  even
 
- ; Arrange
-
-.arrange_memory_list
- ; address, size
+.arrange_mem
+ ; size,address,ptr
  ; dc.bytes!
  dc.l $00000000
 
 .arrange_regs
- ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7     D8/A8
- dc.l $00000001,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000
- dc.l $00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000
- ;    SR      "XNZVC"
- dc.w $0000 ; "-----"
+ ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
+ dc.l $00000001,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000
+ dc.l $00000000,$00000000,$00A20000,$00000000,$00000000,$00000000,$00000000,$00000000
+ dc.w $0000 ; SR -----
 
+.code
+ ; size,address
+ dc.l $00000001,$00070000
+ dc.b $ed,$08
+ LSL.B #6,D0
 
- ; Act
+.code_fail
+ ; size,address
+ dc.l $00000001,$00070000
+ dc.b $ed,$09
+ LSL.B #6,D1
 
-.act_code
- ;    Code size/address
- dc.l $00000001,code_temp ; $00c00000
- ;    Code 
- dc.b $ed,$08	; LSL.B #6,D0
-
-.act_code_fail
- ;    Code size/address
- dc.l $00000001,code_temp ; $00c00000
- ;    Code 
- LSL.B	#6,D1
-; dc.b $ed,$08	; LSL.B #6,D0
-
- ; Assert
-
-.assert_memory_list
+.assert_mem
  dc.l $00000000
 
 .assert_regs
  ;    D0/A0     D1/A1     D2/A2     D3/A3     D4/A4     D5/A5     D6/A6     D7/A7
  dc.l $00000040,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000
  dc.l $00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000,$00000000
- ;    SR      "XNZVC"
- dc.w $0000 ; "-----"
+ dc.w $0000 ; SR -----
