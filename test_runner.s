@@ -280,12 +280,28 @@ run_test
 	add.l	#1,test_count_tot
 
 	; Backup&Safety: Memory areas
+
+	move.l	test_offs_arrange_mem(a5),a0
+	lea	mem_backup,a3
+.backup_mem_loop
+	move.l	(a0)+,d0	; d0 = mem length
+	beq.s	.backup_mem_done
+	move.l	(a0)+,a1	; a1 = mem address
+	move.l	(a0)+,a2	; a2 = mem ptr (ignored)
+	subq	#1,d0
+.backup_mem_loop_inner
+	move.b	(a1)+,(a3)+
+	dbf	d0,.backup_mem_loop_inner
+	bra.s	.backup_mem_loop
+.backup_mem_done
+	
+
 	; Backup&Safety: Code
 
 	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
-	move.l	(a0)+,a1	; a1 = code target address
-			; a0 = code source address (ignored)
+	move.l	(a0)+,a1	; a1 = code address
+			; a0 = code ptr (ignored)
 
 	lea	code_backup,a2
 	addq.l	#3-1,d0	; 3 extra word for jmp back
@@ -296,20 +312,36 @@ run_test
 		
 	; Arrange: Memory areas
 
+	move.l	test_offs_arrange_mem(a5),a0
+	lea	mem_copy,a3
+.arrange_mem_loop
+	move.l	(a0)+,d0	; d0 = mem length
+	beq.s	.arrange_mem_done
+	move.l	(a0)+,a1	; a1 = mem address
+	move.l	(a0)+,a2	; a2 = mem ptr
+	subq	#1,d0
+.arrange_mem_loop_inner
+	move.b	(a2),(a3)+
+	move.b	(a2)+,(a1)+
+	dbf	d0,.arrange_mem_loop_inner
+	bra.s	.arrange_mem_loop
+.arrange_mem_done
+
+
 	; Arrange: Code
 
 	move.l	test_offs_arrange_code(a5),a0
 	move.l	(a0)+,d0	; d0 = code length
-	move.l	(a0)+,a1	; a1 = code target address
-			; a0 = code source address
+	move.l	(a0)+,a1	; a1 = code address
+			; a0 = code ptr
 
 	move.l	a1,.test_jmp_address
 	
 	lea	code_copy,a2
 	subq	#1,d0
 .copy_test_code_loop
-	move.w	(a0),(a1)+
-	move.w	(a0)+,(a2)+
+	move.w	(a0),(a2)+
+	move.w	(a0)+,(a1)+
 	dbf	d0,.copy_test_code_loop	
 	move.w	#jmp_instr,(a1)+
 	move.w	#jmp_instr,(a2)+
@@ -384,9 +416,9 @@ run_test
 
 	move.l	current_test,a5
 	move.l	test_offs_arrange_code(a5),a0
-	move.l	(a0)+,d0		; d0 = code length
-	move.l	(a0)+,a1		; a1 = code target address
-				; a0 = code source address
+	move.l	(a0)+,d0	; d0 = code length
+	move.l	(a0)+,a1	; a1 = code address
+			; a0 = code ptr
 
 	lea	code_backup,a2
 	addq.l	#3-1,d0
@@ -394,6 +426,22 @@ run_test
 	move.w	(a2)+,(a1)+
 	dbf	d0,.restore_code_loop	
 
+	; Restore: Memory
+
+	move.l	test_offs_arrange_mem(a5),a0
+	lea	mem_backup,a3
+.restore_mem_loop
+	move.l	(a0)+,d0	; d0 = mem length
+	beq.s	.restore_mem_done
+	move.l	(a0)+,a1	; a1 = mem address
+	move.l	(a0)+,a2	; a2 = mem ptr (ignored)
+	subq	#1,d0
+.restore_mem_loop_inner
+	move.b	(a3)+,(a1)+
+	dbf	d0,.restore_mem_loop_inner
+	bra.s	.restore_mem_loop
+.restore_mem_done
+	
 
 	; Restore: Clear caches
 	move.l	$4.w,a6
@@ -651,6 +699,8 @@ collected_regs	blk.l	16,$00000000
 
 code_backup	blk.b	512,$ff
 code_copy	blk.b	512,$ff
+mem_backup	blk.b	2048,$ff
+mem_copy	blk.b	2048,$ff
 sp_backup	dc.l	$00000000
 
 code_temp	moveq	#2,d0
