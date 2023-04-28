@@ -484,6 +484,26 @@ run_test
 	bne.w	.code_fail
 	dbf	d0,.check_code_loop	
 
+	; Mem
+
+	move.l	test_offs_assert_mem(a5),a0
+	lea	collected_mem,a3
+.check_mem_loop
+	move.l	(a0)+,d0	; d0 = mem length
+	beq.s	.check_mem_done
+	move.l	(a0)+,a1	; a1 = mem address (ignored)
+	move.l	(a0)+,a2	; a2 = mem ptr
+	subq	#1,d0
+	move.b	#false,.mem_failed
+.check_mem_loop_inner
+	move.b	(a2)+,d1
+	move.b	(a3)+,d2
+	cmp.b	d1,d2
+	bne.w	.mem_fail
+	dbf	d0,.check_mem_loop_inner
+	bra.s	.check_mem_loop
+.check_mem_done
+
 	; Registers
 
 	move.l	test_offs_assert_regs(a5),a0
@@ -517,7 +537,7 @@ run_test
 	bne.w	.fail
 	move.l	collected_regs+$24,d0	; A1
 	cmp.l	$24(a0),d0
-	bne.s	.fail
+	bne.w	.fail
 	move.l	collected_regs+$28,d0	; A2
 	cmp.l	$28(a0),d0
 	bne.s	.fail
@@ -540,9 +560,8 @@ run_test
 	cmp.w	$40(a0),d0
 	bne.s	.fail
 
-	; Memory
 
-	; ok!
+	; All passed - test is ok!
 	
 	add.l	#1,test_count_ok
 
@@ -556,8 +575,11 @@ run_test
 	; fail!
 .code_fail
 	move.b	#true,.code_failed
-	
+	bra.s	.fail
 
+.mem_fail
+	move.b	#true,.mem_failed
+	
 .fail
 	add.l	#1,test_count_fail
 
@@ -568,6 +590,47 @@ run_test
 	move.l	(a5),a0
 	bsr	log_strz
 	bsr	log_str_eol
+
+	; Assert: Log failed mem
+
+
+	move.b	.mem_failed,d0
+	bne.s	.no_mem_fail_log
+
+	move.l	current_test,a5
+	move.l	test_offs_assert_mem(a5),a4
+	lea	collected_mem,a3
+.mem_fail_log_loop
+	move.l	(a4)+,d1
+	beq.s	.mem_fail_log_done
+
+	move.l	(a4)+,d0
+	lea	.fail_mem_strza,a0
+	bsr.w	hex_to_str
+	
+	lea	.fail_mem_strz,a0
+	bsr	log_strz
+
+	move.l	d1,d0
+	move.l	(a4)+,a0
+
+	bsr	log_hex_dump
+	bsr	log_str_eol
+	
+	lea	.fail_memb_strz,a0
+	bsr	log_strz
+
+
+	move.l	d1,d0
+	move.l	a3,a0
+	bsr	log_hex_dump
+	move.l	a0,a3
+
+	bsr	log_str_eol
+	bra.s	.mem_fail_log_loop
+
+.mem_fail_log_done
+.no_mem_fail_log
 
 	; Assert: Log failed code
 
@@ -702,7 +765,13 @@ run_test
 	dc.b	"      expected ",0
 .fail_codeb_strz dc.b	"      was      ",0
 
+.fail_mem_strz	dc.b	"     Mem: $"
+.fail_mem_strza	dc.b	"XXXXXXXX",$a
+	dc.b	"      expected ",0
+.fail_memb_strz dc.b	"      was      ",0
+
 .code_failed	dc.b	0
+.mem_failed	dc.b	0
 		align	0,2
 
 current_test	dc.l	$00000000
@@ -713,6 +782,7 @@ test_count_fail	dc.l	$00000000
 arrange_sr	dc.w	$0000
 collected_sr	dc.w	$0000
 collected_regs	blk.l	16,$00000000
+collected_mem	blk.b	2048,$00
 
 code_backup	blk.b	512,$ff
 code_copy	blk.b	512,$ff
