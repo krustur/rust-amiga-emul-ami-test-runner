@@ -49,6 +49,7 @@ start
 	; Open graphics.library
 
 	move.l	$4.w,a6
+
 	lea	gfx_name(pc),a1
 	moveq	#36,d0
 	jsr	_LVOOpenLibrary(a6)
@@ -94,7 +95,7 @@ start
 	move.l	(gb_ActiView,a6),save_actiview
 	move.l	(gb_copinit,a6),save_copinit
 
-	sub.l	a0,a0
+	sub.l	a1,a1
 	jsr	_LVOLoadView(a6)
 	jsr	_LVOWaitTOF(a6)
 	jsr	_LVOWaitTOF(a6)
