@@ -1,4 +1,7 @@
 
+ ; rts in case this source is run
+ rts
+
 test_suite
 	dc.l	LSL_B_register_by_immediate
 	dc.l	LSL_B_register_by_immediate_FAIL
