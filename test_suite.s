@@ -16,6 +16,8 @@ test_offs_assert_mem	equ	$10
 test_offs_assert_regs	equ	$14
 test_offs_assert_code	equ	$18
 
+;======================================
+
 LSL_B_register_by_immediate
  dc.l .name		; $00
  dc.l .arrange_mem	; $04
@@ -31,8 +33,7 @@ LSL_B_register_by_immediate
 
 
 .arrange_mem
- ; size,address,ptr
- ; dc.bytes!
+ ; length,address,ptr
  dc.l $00000000
 
 .arrange_regs
@@ -42,7 +43,7 @@ LSL_B_register_by_immediate
  dc.w $0000 ; SR -----
 
 .arrange_code
- ; size,address
+ ; length,address
  dc.l $00000001,$00070000
  dc.b $ed,$08 ; LSL.B #6,D0
 
@@ -58,7 +59,10 @@ LSL_B_register_by_immediate
 .assert_code
  LSL.B #6,D0
 
+;======================================
+
 LSL_B_register_by_immediate_FAIL
+
  dc.l .name		; $00
  dc.l .arrange_mem	; $04
  dc.l .arrange_regs	; $08
@@ -72,8 +76,7 @@ LSL_B_register_by_immediate_FAIL
  even
 
 .arrange_mem
- ; size,address,ptr
- ; dc.bytes!
+ ; length,address,ptr
  dc.l $00000000
 
 .arrange_regs
@@ -83,7 +86,7 @@ LSL_B_register_by_immediate_FAIL
  dc.w $0000 ; SR -----
 
 .arrange_code
- ; size,address
+ ; length,address
  dc.l $00000001,$00070000
  dc.b $ed,$08
 
