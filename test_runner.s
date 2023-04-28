@@ -408,6 +408,23 @@ run_test
 	move.l	a6,collected_regs+$38
 	move.l	a7,collected_regs+$3c
 
+	; Act: Collect mem
+
+	move.l	current_test,a5
+	move.l	test_offs_assert_mem(a5),a0
+	lea	collected_mem,a3
+.collect_mem_loop
+	move.l	(a0)+,d0	; d0 = mem length
+	beq.s	.collect_mem_done
+	move.l	(a0)+,a1	; a1 = mem address
+	move.l	(a0)+,a2	; a2 = mem ptr (ignored)
+	subq	#1,d0
+.collect_mem_loop_inner
+	move.b	(a1)+,(a3)+
+	dbf	d0,.collect_mem_loop_inner
+	bra.s	.collect_mem_loop
+.collect_mem_done
+
 	; Restore: SP
 
 	move.l	sp_backup,sp
