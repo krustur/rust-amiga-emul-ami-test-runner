@@ -31,6 +31,14 @@ false	equ $01	; can use bne for if not true
 
 jmp_instr		equ $4ef9
 
+test_offs_name		equ	$00
+test_offs_arrange_mem	equ	$04
+test_offs_arrange_regs	equ	$08
+test_offs_arrange_code	equ	$0c
+test_offs_assert_mem	equ	$10
+test_offs_assert_regs	equ	$14
+test_offs_assert_code	equ	$18
+
 WAIT_VBL	MACRO
 .sync\@	btst	#0,$dff005
 	beq.s	.sync\@
@@ -226,7 +234,7 @@ exit
 	move.l	save_global_sp,sp
 	movem.l	(sp)+,d0-d7/a0-a6
 
-	; Set D-regs to show test counts
+	; Set D-regs to show test counts in asm-one
 	
 ;	move.l	test_count_tot,d0
 ;	move.l	test_count_ok,d1
@@ -686,7 +694,7 @@ run_test
 	move.l	$10(a4),d1
 	move.w	#"D4",d2
 	bsr.w	.fail_reg_details
-	move.l	collected_regs+$04,d0	; D5
+	move.l	collected_regs+$14,d0	; D5
 	move.l	$14(a4),d1
 	move.w	#"D5",d2
 	bsr.w	.fail_reg_details
@@ -790,9 +798,6 @@ mem_backup	blk.b	2048,$ff
 mem_copy	blk.b	2048,$ff
 sp_backup	dc.l	$00000000
 
-code_temp	moveq	#2,d0
-
- 
 
 ; Logger functions
 
@@ -940,7 +945,11 @@ log_buffer_end
 	even
 
 	; include test suite
-	
-	include	"dev:github/rust-amiga-emul-ami-test-runner/test_suite.s"
+	incdir	"dev:github/rust-amiga-emul-ami-test-runner/tests/"
+	include	"test_suite.s"
+
+	; original test suite
+;	include	"dev:github/rust-amiga-emul-ami-test-runner/test_suite.s"
+
 
 end_of_all_code

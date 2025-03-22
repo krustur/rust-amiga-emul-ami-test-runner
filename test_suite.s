@@ -3,18 +3,11 @@
  rts
 
 test_suite
-	dc.l	LSL_B_register_by_immediate
-	dc.l	LSL_B_register_by_immediate_FAIL
-	; no more tests
-	dc.l	$0
-
-test_offs_name		equ	$00
-test_offs_arrange_mem	equ	$04
-test_offs_arrange_regs	equ	$08
-test_offs_arrange_code	equ	$0c
-test_offs_assert_mem	equ	$10
-test_offs_assert_regs	equ	$14
-test_offs_assert_code	equ	$18
+ dc.l LSL_B_register_by_immediate
+ dc.l LSL_B_register_by_immediate_FAIL
+ dc.l ADDI_W_immediate_data_to_absolute_long
+ ; no more tests
+ dc.l	$0
 
 ;======================================
 
